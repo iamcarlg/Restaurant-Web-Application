@@ -1,0 +1,81 @@
+<?php
+
+/* Vérification ci-dessous à faire sur toutes les pages dont l'accès est
+autorisé à un utilisateur connecté. */
+session_start();
+if(!isset($_SESSION['loggin']) && !isset($_SESSION['statut']))
+{
+ //Si la session n'est pas ouverte, redirection vers la page du formulaire
+ header("Location:session.php");
+ exit();
+
+
+}
+
+$mysqli = new mysqli('localhost','zrugeroca','info1234','zfl2-zrugeroca');
+
+if ($mysqli->connect_errno)
+{
+ // Affichage d'un message d'erreur
+ echo "Error: Problème de connexion à la BDD \n";
+ echo "Errno: " . $mysqli->connect_errno . "\n";
+ echo "Error: " . $mysqli->connect_error . "\n";
+ // Arrêt du chargement de la page
+ exit();
+}
+
+// Instructions PHP à ajouter pour l'encodage utf8 du jeu de caractères
+if (!$mysqli->set_charset("utf8")) {
+    printf("Pb de chargement du jeu de car. utf8 : %s\n", $mysqli->error);
+    exit();
+   }
+if(isset($_POST['valider'])){
+      $news_title= htmlspecialchars(addslashes(($_POST['news_title'])));
+      $news_text=htmlspecialchars(addslashes($_POST['news_text']));
+      $news_state=htmlspecialchars(addslashes($_POST['news_state']));
+    
+      $sql="SELECT MAX(new_number) AS maximum FROM t_news_new;";
+
+      if (!$resultat=$mysqli->query($sql))
+      {
+       // La requête a echoué
+       echo "Error: la requête a échoué \n";
+       echo "Query: " . $sql . "\n";
+       echo "Errno: " . $mysqli->errno . "\n";
+       echo "Error: " . $mysqli->error . "\n";
+      }
+      else
+      {
+          $ligne=$resultat->fetch_assoc();
+          $lemax=$ligne["maximum"];
+          //echo($lemax);
+          $incr_new = $lemax + 1;
+
+
+          //$insert_news = "INSERT INTO t_news_new VALUES ('".$res_profile."', $incr_new, '".$news_title."', '".$news_text."', CURDATE(), $news_state)";
+          $insert_news = "INSERT INTO t_news_new VALUES ('".$_SESSION['loggin']."', $incr_new, '".$news_title."', '".$news_text."', CURDATE(), $news_state)";
+
+          //$sql3="INSERT INTO t_userprofile_usr VALUES('" .$id. "','" .$last_name. "', '" .$first_name. "' , '" .$mail. "' , '" .$validity. "' , '" .$statut. "' , CURDATE());";
+          $res = $mysqli->query($insert_news);
+
+          if($mysqli->query($insert_news)){
+              echo "New record added !";
+
+          }else{
+
+          }
+          
+      //On peut ensuite incrémenter la variable $lemax pour ajouter
+       // une nouvelle actualité
+
+       header("Location:admin_actualites.php");
+
+    }
+}
+
+if (isset($_POST["logout"])) {
+    header("Location:session.php");
+}
+
+    
+?>
